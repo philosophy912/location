@@ -1,7 +1,7 @@
 <template>
   <div id="map"></div>
   <div id="myChart">
-    <div id="top" ></div>
+    <div id="top"></div>
     <div id="bottom"></div>
   </div>
 </template>
@@ -12,11 +12,13 @@ import {fetchData} from "./api";
 import {ref, onMounted} from "vue";
 import * as echarts from 'echarts'
 
-const chart = ref()
 
+const markers = ref({})
 
 let BM;
 let map;
+let topChart;
+let bottomChart;
 
 maps.then(() => {
   BM = window.BM
@@ -42,43 +44,53 @@ maps.then(() => {
           .bindPopup('<p>纳税人识别号：</br>生产经营地址：</br>累计销售收入：</br>')
           .addTo(map);
       marker.openPopup()
+      markers[id] = marker
+      marker.addEventListener("click", () => {
+        // 获取点击点的经纬度
+        let latLng = marker.getLatLng()
+        // 后续根据经纬度来查询相关信息
+        // 获取当前的公司名称
+        let companyName = marker.getTooltip()._content
+        console.log(companyName)
+        echartsInit()
+        echartsInit1()
+      })
     })
   })
 })
 
+
 onMounted(() => {
-  echartsInit()
-  echartsInit1()
+  topChart = echarts.init(document.getElementById("top"))
+  bottomChart = echarts.init(document.getElementById("bottom"))
 })
 
 const echartsInit = () => {
-  const myChart = echarts.init(document.getElementById("top"))
-  var option = {
-    title: {
-      text: 'ECharts 入门示例'
-    },
-    tooltip: {},
-    legend: {
-      data: ['销量']
-    },
+  let option = {
     xAxis: {
-      data: ['衬衫', '羊毛衫', '雪纺衫', '裤子', '高跟鞋', '袜子']
+      data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     },
     yAxis: {},
     series: [
       {
-        name: '销量',
         type: 'bar',
-        data: [5, 20, 36, 10, 10, 20]
+        data: [23, 24, 18, 25, 27, 28, 25],
+        itemStyle: {
+          boarderRadius: 5,
+          borderWidth: 1,
+          borderType: 'solid',
+          borderColor: '#73c0de',
+          shadowColor: '#5470c6',
+          shadowBlur: 3
+        }
       }
     ]
   };
-  myChart.setOption(option);
+  topChart.setOption(option);
 }
 
 const echartsInit1 = () => {
-  const myChart = echarts.init(document.getElementById("bottom"))
-  var option = {
+  let option = {
     title: {
       text: 'ECharts 入门示例'
     },
@@ -98,7 +110,7 @@ const echartsInit1 = () => {
       }
     ]
   };
-  myChart.setOption(option);
+  bottomChart.setOption(option);
 }
 
 </script>
@@ -129,7 +141,7 @@ const echartsInit1 = () => {
   height: 500px;
   left: 1px;
   width: 300px;
-  color: white;
+  //color: white;
 }
 
 #bottom {
@@ -139,7 +151,7 @@ const echartsInit1 = () => {
   width: 300px;
   top: 600px;
   left: 1px;
-  color: white;
+  //color: white;
 }
 
 .tooltip {
