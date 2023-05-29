@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <link href="http://127.0.0.1:9000/bigemap.js/v2.1.0/bigemap.css" rel="stylesheet" />
+  <script src="http://127.0.0.1:9000/bigemap.js/v2.1.0/bigemap.js"></script>
+  <!--引入鼠标绘制的JS+CSS-->
+  <!--对应下面的CSS+JS的下载地址 请直接访问 http://bigemap.com/public/mouse_draw/mouse_draw.zip 来下载-->
+
+  <script src="./ccc/bm.draw.min.js"></script>
+  <script src="./ccc/jquery.min.js"></script>
+  <script src="./ccc/d3.min.js"></script>
+  <link rel="stylesheet" href="./ccc/Bigemap.draw.css" />
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+
+      /*重写默认的字体的属性*/
+    }
+
+    .my_tooltip {
+      color: white;
+      background: transparent;
+      border: none;
+      font-size: 12px;
+    }
+
+    .my_tooltip::before {
+      display: none;
+    }
+
+    #left {
+      position: absolute;
+      z-index: 10;
+      height: 100%;
+      width: 300px;
+      background-color: black;
+      opacity: 0.5;
+    }
+
+    .d31 {
+      position: absolute;
+      z-index: 10;
+      height: 100%;
+      width: 0px;
+      background-color: white;
+    }
+
+    .d32 {
+      position: absolute;
+      z-index: 10;
+      height: 100%;
+      width: 0px;
+      background-color: white;
+    }
+
+    .toptitle {
+      position: absolute;
+      z-index: 10;
+      height: 72px;
+      left: 67px;
+      color: white;
+    }
+
+    .bottomtitle {
+      position: absolute;
+      z-index: 10;
+      height: 72px;
+      top: 313px;
+      left: 67px;
+      color: white;
+    }
+
+    .svg1 {
+      border-radius: 50%;
+      background-color: white;
+      opacity: 0.8;
+    }
+  </style>
+
+  <title>宋家乡部分_ 卫图</title>
+</head>
+<style type="text/css">
+  html,
+  body,
+  #map {
+    width: 100%;
+    height: 100%;
+  }
+
+  .bigemap-draw-section {
+    top: 50px;
+  }
+</style>
+
+<body>
+  <div id="map"></div>
+  <div class="tool_bar">
+    <p>
+      <a id="add_marker" href="javascript:void (0)" class="button button-tiny button-rounded button-primary">显示标注</a>
+    </p>
+    <p>
+      <a id="remove_marker" href="javascript:void (0)" class="button button-tiny button-rounded button-caution">删除标注</a>
+    </p>
+  </div>
+  <div id="left">
+    <div class="toptitle"></div>
+    <div class="bottomtitle"></div>
+  </div>
+  <div class="d31"></div>
+  <div class="d32"></div>
+
+  <script>
+    BM.Config.HTTP_URL = "http://127.0.0.1:9000";
+    var map = BM.map("map", "bigemap.baidu-map", {
+      crs: BM.CRS.Baidu,
+      center: [28.737701416015625, 104.82401275634766],
+      zoom: 13,
+      zoomControl: true,
+      attributionControl: false,
+      preferCanvas: true,
+    });
+    map.fitBounds([
+      [28.731632232666016, 104.8155746459961],
+      [28.7437686920166, 104.83244323730469],
+    ]);
+
+    //公司命名
+    BM.marker([28.73416136, 104.82307792])
+      .bindTooltip("宜宾优派科技</br>有限公司", {
+        direction: "bottom",
+        permanent: true,
+        className: "my_tooltip",
+      })
+      .addTo(map);
+    BM.marker([28.73588296, 104.82187629])
+      .bindTooltip("宜宾市视泰科技</br>有限公司", {
+        direction: "bottom",
+        permanent: true,
+        className: "my_tooltip",
+      })
+      .addTo(map);
+
+    //扇形图柱状图数据展示
+    //标记数据
+    places = [
+      { name: "", position: [28.73416136, 104.82307792] },
+      {
+        name: "",
+        position: [28.73588296, 104.82187629],
+      },
+    ];
+    var data = [];
+    var data2 = [];
+
+    //定义坐标变量
+    places.map((v, i) => {
+      var marer = BM.marker(v.position).addTo(map);
+      map.on("zoomend", function () {
+        let z = map.getZoom();
+        if (z >= 16) {
+          marer.options.icon.options.iconSize = icsize;
+          marer.options.icon.options.iconAnchor = [icsize[0] / 2, icsize[1]];
+        } else if (z > 6) {
+          let lessen = 16 - z;
+          let temp = transform(lessen);
+          marer.options.icon.options.iconSize = temp;
+          marer.options.icon.options.iconAnchor = [temp[0] / 2, temp[1]];
+        } else {
+          let temp = transform(9);
+          marer.options.icon.options.iconSize = temp;
+          marer.options.icon.options.iconAnchor = [temp[0] / 2, temp[1]];
+        }
+        // marer.addTo(map)
+        marer.setIcon(marer.options.icon);
+      });
+      function transform(small) {
+        let temp = icsize.map((item) => {
+          return item * (1 - 0.1 * small); //缩小十分之几
+        });
+        return temp;
+      }
+
+      //添加图文信息
+      marker = BM.marker(v.position)
+        .bindPopup(
+          '<p>纳税人识别号：</br>生产经营地址：</br>累计销售收入：</br> 行业类型：</br>小微企业标志：</p><p><img src="http://www.bigemap.com/upload/columnthumbnail/20180328/5abb657fa458f.png" alt=""></p>'
+        )
+        .addTo(map);
+      marker.openPopup();
+
+      if (i == 1) {
+        draw(v);
+      }
+
+      //标记点击事件
+      marker.on("click", function () {
+        $(".toptitle").html("<h3>" + v.name + "分税种入库比例饼状图</h3>");
+        $(".bottomtitle").html("<h3>" + v.name + "分税种入库金额柱状图</h3>");
+        data.length = 0;
+        data2.length = 0;
+        d3.selectAll("svg").remove();
+        var wid = $("#left").css("width");
+        if (wid == "0px") {
+          $("#left").animate({ width: 300 }, 500);
+        }
+        setTimeout(function () {
+          var height = 240;
+          var width = 240;
+          var svg = d3
+            .select(".d31")
+            .append("svg")
+            .attr("height", height)
+            .attr("width", width)
+            .attr("transform", "translate(28,56)")
+            .attr("class", "svg1");
+          var pieg = svg.append("g");
+          var fruit = ["增值税", "企业所得税", "消费税", "印花税", "资源税"];
+          //创建假数据
+          for (let index = 0; index < 5; index++) {
+            num = Math.random() * 50;
+            if (num < 20) {
+              num = num + 20;
+            }
+            data.push(num.toFixed(2));
+          }
+
+          //画饼状图
+          //定义颜色比例尺
+          var colorScale = d3
+            .scaleOrdinal()
+            .domain(d3.range(data.length))
+            .range(d3.schemeCategory10);
+          //处理数据
+          var pie = d3.pie();
+
+          //新建一个弧形生成器
+          var innerRadius = 0; //内半径
+          var outerRadius = 120; //外半径
+          var arc_generator = d3
+            .arc()
+            .innerRadius(innerRadius)
+            .outerRadius(outerRadius);
+          //将原始数据变成可以绘制饼状图的数据，
+          var pieData = pie(data);
+          //打印出来查看转换后的数据
+          console.log(pieData);
+          //  每一个扇形及其对应的文字建立一个分组<g>
+          gs = pieg
+            .selectAll(".g")
+            .data(pieData)
+            .enter()
+            .append("g")
+            .attr(
+              "transform",
+              "translate(" + width / 2 + "," + height / 2 + ")"
+            ); //位置信息
+          // 绘制扇形
+          gs.append("path")
+            .attr("d", function (d) {
+              return arc_generator(d); //往弧形生成器中出入数据
+            })
+            .attr("fill", function (d, i) {
+              return colorScale(i); //设置颜色
+            });
+
+          //绘制饼状图上面的文字信息
+          gs.append("text")
+            .attr("transform", function (d) {
+              //位置设在中心处
+              return "translate(" + arc_generator.centroid(d) + ")";
+            })
+            .attr("text-anchor", "middle")
+            .text(function (d, i) {
+              return d.data;
+            });
+          gs.append("text")
+            .attr("transform", function (d) {
+              //位置设在中心处
+              return "translate(" + arc_generator.centroid(d) + ")";
+            })
+            .attr("text-anchor", "middle")
+            .attr("y", 20)
+            .text(function (d, i) {
+              return fruit[i];
+            });
+
+          //————+——————————————————————————————————————————————————————————————————————————————————————
+          // 画柱状图
+          //创建假数据
+          for (let index = 0; index < 7; index++) {
+            num = Math.random() * 100;
+            if (num < 20) {
+              num = num + 20;
+            }
+            data2.push(num.toFixed(0));
+          }
+          var svg2 = d3
+            .select(".d32")
+            .append("svg")
+            .attr("height", height)
+            .attr("width", width)
+            .attr("transform", "translate(25,370)");
+          //x轴数据
+          Xdatas = [
+            "增",
+            "企",
+            "消",
+            "印",
+            "资",
+            "车",
+            "附",
+          ];
+          //创建x轴比例尺
+          var x = d3
+            .scaleBand()
+            .domain(Xdatas)
+            .rangeRound([0, width - 50])
+            .padding(0.1);
+          xAsix = d3.axisBottom(x);
+          var g = svg2.append("g");
+          g.append("g")
+            .attr("transform", "translate(25," + 210 + ")")
+            .attr("color", "snow")
+            .call(xAsix);
+          console.log(data2);
+          //y轴比例尺
+          var y = d3
+            .scaleLinear()
+            .domain([0, d3.max(data2)])
+            .rangeRound([height - 50, 0]);
+          yAsix = d3.axisLeft(y);
+          g.append("g")
+            .attr("transform", "translate(25,18)")
+            .call(yAsix)
+            .attr("color", "snow");
+
+          chart = g.selectAll(".bar").data(data2).enter().append("g");
+          //添加矩形
+          chart
+            .append("rect")
+            .attr("x", function (d, i) {
+              return x(Xdatas[i]);
+            })
+            .attr("cursor", "pointer")
+            .attr("y", function (d) {
+              return y(y.domain()[0]) - 5;
+            })
+            .attr("fill", function (d, i) {
+              // 生成随机颜色
+              return colorScale(i);
+            })
+            .attr("stroke", "#FFF")
+            .attr("stroke-width", "3px")
+            .transition()
+            .delay(function (d, i) {
+              return (i + 1) * 50;
+            })
+            .duration(2000)
+            .ease(d3.easeBounceIn)
+            .attr("y", function (d) {
+              return y(d) - 5;
+            })
+            .attr("width", x.bandwidth())
+            .attr("height", function (d) {
+              return height - 50 - y(d);
+            })
+            .attr("transform", "translate(25,25)");
+          //添加文字
+          chart
+            .append("text")
+            .attr("fill", "#FFF")
+            .attr("x", function (d, i) {
+              return x(Xdatas[i]);
+            })
+            .attr("y", function (d) {
+              return y(y.domain()[0]);
+            })
+            .transition()
+            .delay(function (d, i) {
+              return (i + 1) * 100;
+            })
+            .duration(2000)
+            .ease(d3.easeBounceIn)
+            .attr("y", function (d) {
+              return y(d);
+            })
+            .attr("dx", function (d) {
+              return x.bandwidth() / 2;
+            })
+            .attr("dy", 20)
+            .text(function (d) {
+              return d;
+            })
+            .attr("transform", "translate(16,-8)");
+        }, 100);
+      });
+    });
+    //map点击事件
+    map.on("click", function (e) {
+      $(".toptitle").html("");
+      $(".bottomtitle").html("");
+      d3.selectAll("svg").remove();
+      $("#left").animate({ width: 0 }, 1000);
+    });
+    function draw(v) {
+      $(".toptitle").html("<h3>" + v.name + "分税种入库比例饼状图</h3>");
+      $(".bottomtitle").html("<h3>" + v.name + "分税种入库金额柱状图</h3>");
+      var height = 240;
+      var width = 240;
+      var svg = d3
+        .select(".d31")
+        .append("svg")
+        .attr("height", height)
+        .attr("width", width)
+        .attr("transform", "translate(25,50)")
+        .attr("class", "svg1");
+      var pieg = svg.append("g");
+      var fruit = ["增值税", "企业所得税", "消费税", "印花税", "资源税"];
+      //创建假数据
+      for (let index = 0; index < 5; index++) {
+        num = Math.random() * 100;
+        if (num < 20) {
+          num = num + 20;
+        }
+        data.push(num.toFixed(2));
+      }
+
+      //画饼状图
+      //定义颜色比例尺
+      var colorScale = d3
+        .scaleOrdinal()
+        .domain(d3.range(data.length))
+        .range(d3.schemeCategory10);
+      //处理数据
+      var pie = d3.pie();
+
+      //新建一个弧形生成器
+      var innerRadius = 0; //内半径
+      var outerRadius = 120; //外半径
+      var arc_generator = d3
+        .arc()
+        .innerRadius(innerRadius)
+        .outerRadius(outerRadius);
+      //将原始数据变成可以绘制饼状图的数据，
+      var pieData = pie(data);
+      //打印出来查看转换后的数据
+      console.log(pieData);
+      //  每一个扇形及其对应的文字建立一个分组<g>
+      gs = pieg
+        .selectAll(".g")
+        .data(pieData)
+        .enter()
+        .append("g")
+        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")"); //位置信息
+      // 绘制扇形
+      gs.append("path")
+        .attr("d", function (d) {
+          return arc_generator(d); //往弧形生成器中出入数据
+        })
+        .attr("fill", function (d, i) {
+          return colorScale(i); //设置颜色
+        });
+
+      //绘制饼状图上面的文字信息
+      gs.append("text")
+        .attr("transform", function (d) {
+          //位置设在中心处
+          return "translate(" + arc_generator.centroid(d) + ")";
+        })
+        .attr("text-anchor", "middle")
+        .text(function (d, i) {
+          return d.data;
+        });
+      gs.append("text")
+        .attr("transform", function (d) {
+          //位置设在中心处
+          return "translate(" + arc_generator.centroid(d) + ")";
+        })
+        .attr("text-anchor", "middle")
+        .attr("y", 20)
+        .text(function (d, i) {
+          return fruit[i];
+        });
+
+      //————+——————————————————————————————————————————————————————————————————————————————————————
+      // 画柱状图
+      //创建假数据
+      for (let index = 0; index < 7; index++) {
+        num = Math.random() * 100;
+        if (num < 20) {
+          num = num + 20;
+        }
+        data2.push(num.toFixed(0));
+      }
+      var svg2 = d3
+        .select(".d32")
+        .append("svg")
+        .attr("height", height)
+        .attr("width", width)
+        .attr("transform", "translate(25,370)");
+      //x轴数据
+      Xdatas = ["增",
+        "企",
+        "消",
+        "印",
+        "资",
+        "车",
+        "附",];
+      //创建x轴比例尺
+      var x = d3
+        .scaleBand()
+        .domain(Xdatas)
+        .rangeRound([0, width - 50])
+        .padding(0.1);
+      xAsix = d3.axisBottom(x);
+      var g = svg2.append("g");
+      g.append("g")
+        .attr("transform", "translate(25," + 210 + ")")
+        .attr("color", "snow")
+        .call(xAsix);
+      console.log(data2);
+      //y轴比例尺
+      var y = d3
+        .scaleLinear()
+        .domain([0, d3.max(data2)])
+        .rangeRound([height - 50, 0]);
+      yAsix = d3.axisLeft(y);
+      g.append("g")
+        .attr("transform", "translate(25,18)")
+        .call(yAsix)
+        .attr("color", "snow");
+
+      chart = g.selectAll(".bar").data(data2).enter().append("g");
+      //添加矩形
+      chart
+        .append("rect")
+        .attr("x", function (d, i) {
+          return x(Xdatas[i]);
+        })
+        .attr("cursor", "pointer")
+        .attr("y", function (d) {
+          return y(y.domain()[0]) - 5;
+        })
+        .attr("fill", function (d, i) {
+          // 生成随机颜色
+          return colorScale(i);
+        })
+        .attr("stroke", "#FFF")
+        .attr("stroke-width", "3px")
+        .transition()
+        .delay(function (d, i) {
+          return (i + 1) * 50;
+        })
+        .duration(2000)
+        .ease(d3.easeBounceIn)
+        .attr("y", function (d) {
+          return y(d) - 5;
+        })
+        .attr("width", x.bandwidth())
+        .attr("height", function (d) {
+          return height - 50 - y(d);
+        })
+        .attr("transform", "translate(25,25)");
+      //添加文字
+      chart
+        .append("text")
+        .attr("fill", "#FFF")
+        .attr("x", function (d, i) {
+          return x(Xdatas[i]);
+        })
+        .attr("y", function (d) {
+          return y(y.domain()[0]);
+        })
+        .transition()
+        .delay(function (d, i) {
+          return (i + 1) * 100;
+        })
+        .duration(2000)
+        .ease(d3.easeBounceIn)
+        .attr("y", function (d) {
+          return y(d);
+        })
+        .attr("dx", function (d) {
+          return x.bandwidth() / 2;
+        })
+        .attr("dy", 20)
+        .text(function (d) {
+          return d;
+        })
+        .attr("transform", "translate(16,-8)");
+    }
+    //图标自适应
+
+
+
+  </script>
+  <script>
+    //鼠标绘制工具
+    //创建一个图形覆盖物的集合来保存点线面
+    var drawnItems = new BM.FeatureGroup();
+    //添加在地图上
+    map.addLayer(drawnItems);
+    // 为多边形设置一个标题
+    BM.drawLocal.draw.toolbar.buttons.polygon = "添加一个多边形";
+    //实例化鼠标绘制的控件
+    var drawControl = new BM.Control.Draw({
+      position: "topright", //位置
+      //控制绘制的图形
+      draw: {
+        polyline: {
+          //单独设置线的颜色为红色，其它为默认颜色
+          shapeOptions: {
+            color: "red",
+          },
+        },
+        polygon: true,
+        circle: true,
+        marker: true,
+      },
+      edit: { featureGroup: drawnItems },
+    });
+
+    map.addControl(drawControl);
+    //监听绘画完成事件
+    map.on(BM.Draw.Event.CREATED, function (e) {
+      var type = e.layerType,
+        layer = e.layer;
+      if (type === "marker") {
+        //如果是标注，实现一个点击出现的提示
+        layer.bindPopup("A popup!");
+      }
+      drawnItems.addLayer(layer);
+    });
+  </script>
+</body>
+
+</html>
