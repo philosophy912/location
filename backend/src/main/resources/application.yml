@@ -1,7 +1,10 @@
+server:
+  port: 8080
+
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://10.100.193.82:9999/ybswj?setUnicode=true&characterEncoding=utf8&serverTimezone=GMT%2B8
+    url: jdbc:mysql://127.0.0.1:3306/ybswj?setUnicode=true&characterEncoding=utf8&serverTimezone=GMT%2B8
     username: root
     password: root
   jpa:

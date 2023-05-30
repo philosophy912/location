@@ -9,11 +9,9 @@
 <script setup lang="js">
 import maps from './map.js'
 import {fetchData} from "./api";
-import {ref, onMounted} from "vue";
+import {onMounted} from "vue";
 import * as echarts from 'echarts'
 
-
-const markers = ref({})
 
 let BM;
 let map;
@@ -30,28 +28,32 @@ maps.then(() => {
   // 后台获取数据
   fetchData().then(res => {
     // console.log(res)
-    res.forEach((item) => {
-      // console.log(JSON.stringify(item))
-      const id = item["id"]
-      const title = item["name"]
-      const lng = item["lng"]
-      const lat = item["lat"]
-      const address = item["address"]
-      // console.log("lng is " + lng + " lat is " + lat)
+    const responseMarkers = res.data
+    responseMarkers.forEach((item) => {
+      const id = item["id"];
+      // 社会信用代码
+      const socialCreditCode = item["socialCreditCode"];
+      // 纳税人名称
+      const taxPersonName = item["taxPersonName"];
+      // 主管局
+      const supervisionUnit = item["supervisionUnit"];
+      // 行业名称
+      const industryName = item["industryName"];
+      // 经度信息
+      const longitude = item["longitude"];
+      // 纬度信息
+      const latitude = item["latitude"];
       // 前台利用数据展示  {title: address, zIndexOffset: 1000}
-      let marker = BM.marker([lat, lng])
-          .bindTooltip(title)
-          .bindPopup('<p>纳税人识别号：</br>生产经营地址：</br>累计销售收入：</br>')
+      let marker = BM.marker([latitude, longitude])
+          .bindTooltip(taxPersonName)
+          // 纳税人名称、行业、主管局
+          .bindPopup('<p>纳税人名称：' + taxPersonName + '</br>行业：' + industryName + '</br>主管局：' + supervisionUnit + '</br>')
           .addTo(map);
       marker.openPopup()
-      markers[id] = marker
+      marker.id = id
       marker.addEventListener("click", () => {
-        // 获取点击点的经纬度
-        let latLng = marker.getLatLng()
-        // 后续根据经纬度来查询相关信息
-        // 获取当前的公司名称
-        let companyName = marker.getTooltip()._content
-        console.log(companyName)
+        // marker的ID，可以通过这个来查数据
+        console.log(marker.id)
         echartsInit()
         echartsInit1()
       })
@@ -141,7 +143,7 @@ const echartsInit1 = () => {
   height: 500px;
   left: 1px;
   width: 300px;
-  //color: white;
+//color: white;
 }
 
 #bottom {
@@ -151,14 +153,14 @@ const echartsInit1 = () => {
   width: 300px;
   top: 600px;
   left: 1px;
-  //color: white;
+//color: white;
 }
 
 .tooltip {
   color: white;
   background: transparent;
   border: none;
-  font-size: 12px;
+  font-size: 10px;
 }
 
 .tooltip::before {

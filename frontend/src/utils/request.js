@@ -30,7 +30,16 @@ service.interceptors.response.use(
      * You can also judge the status by HTTP Status Code
      */
     response => {
-        return response.data
+        if (response.status === 200) {
+            const res = response.data
+            if (res.code !== 20000) {
+                return Promise.reject(new Error(res.message || 'Error'));
+            } else {
+                return res;
+            }
+        } else {
+            Promise.reject().then(r => console.log("rejected"));
+        }
     },
     error => {
         return Promise.reject(error)
