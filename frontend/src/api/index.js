@@ -13,3 +13,10 @@ export const fetchData = () => {
         method: 'get'
     });
 }
+
+export const fetchChart = (id) => {
+    return request({
+        url: '/tax/chart?id=' + id,
+        method: 'get'
+    });
+}

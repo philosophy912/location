@@ -8,9 +8,10 @@
 
 <script setup lang="js">
 import maps from './map.js'
-import {fetchData} from "./api";
+import {fetchChart, fetchData} from "./api";
 import {onMounted} from "vue";
 import * as echarts from 'echarts'
+
 
 
 let BM;
@@ -54,8 +55,10 @@ maps.then(() => {
       marker.addEventListener("click", () => {
         // marker的ID，可以通过这个来查数据
         console.log(marker.id)
-        echartsInit()
-        echartsInit1()
+        let id = marker.id
+        updateChart(id)
+        // echartsInit()
+        // echartsInit1()
       })
     })
   })
@@ -67,53 +70,67 @@ onMounted(() => {
   bottomChart = echarts.init(document.getElementById("bottom"))
 })
 
-const echartsInit = () => {
-  let option = {
-    xAxis: {
-      data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    },
-    yAxis: {},
-    series: [
-      {
-        type: 'bar',
-        data: [23, 24, 18, 25, 27, 28, 25],
-        itemStyle: {
-          boarderRadius: 5,
-          borderWidth: 1,
-          borderType: 'solid',
-          borderColor: '#73c0de',
-          shadowColor: '#5470c6',
-          shadowBlur: 3
+
+const updateChart = (id) => {
+  fetchChart(id).then(res => {
+    const data = res.data
+    // console.log(data)
+    const sales = data.taxes
+    const taxes = data.sales
+    // console.log(sales.yAxis)
+    // console.log(typeof (sales.yAxis))
+    // console.log(taxes)
+    const option1 = {
+      title: {
+        text: sales.title
+      },
+      xAxis: {
+        data: sales.xAxis
+      },
+      yAxis: {},
+      series: [
+        {
+          type: 'bar',
+          data: sales.yAxis,
+          itemStyle: {
+            boarderRadius: 5,
+            borderWidth: 1,
+            borderType: 'solid',
+            borderColor: '#73c0de',
+            shadowColor: '#5470c6',
+            shadowBlur: 3
+          }
         }
-      }
-    ]
-  };
-  topChart.setOption(option);
+      ]
+    }
+    const option2 = {
+      title: {
+        text: taxes.title
+      },
+      xAxis: {
+        data: taxes.xAxis
+      },
+      yAxis: {},
+      series: [
+        {
+          type: 'bar',
+          data: taxes.yAxis,
+          itemStyle: {
+            boarderRadius: 5,
+            borderWidth: 1,
+            borderType: 'solid',
+            borderColor: '#73c0de',
+            shadowColor: '#5470c6',
+            shadowBlur: 3
+          }
+        }
+      ]
+    }
+    topChart.setOption(option1);
+    bottomChart.setOption(option2);
+  })
 }
 
-const echartsInit1 = () => {
-  let option = {
-    title: {
-      text: 'ECharts 入门示例'
-    },
-    tooltip: {},
-    legend: {
-      data: ['销量']
-    },
-    xAxis: {
-      data: ['衬衫', '羊毛衫', '雪纺衫', '裤子', '高跟鞋', '袜子']
-    },
-    yAxis: {},
-    series: [
-      {
-        name: '销量',
-        type: 'bar',
-        data: [5, 20, 36, 10, 10, 20]
-      }
-    ]
-  };
-  bottomChart.setOption(option);
-}
 
 </script>
 
@@ -131,7 +148,7 @@ const echartsInit1 = () => {
   position: absolute;
   z-index: 10;
   height: 100%;
-  width: 300px;
+  width: 500px;
   background-color: black;
   opacity: 0.5;
   margin-top: 70px;
@@ -142,7 +159,7 @@ const echartsInit1 = () => {
   z-index: 10;
   height: 500px;
   left: 1px;
-  width: 300px;
+  width: 500px;
 //color: white;
 }
 
@@ -150,7 +167,7 @@ const echartsInit1 = () => {
   position: absolute;
   z-index: 10;
   height: 500px;
-  width: 300px;
+  width: 500px;
   top: 600px;
   left: 1px;
 //color: white;

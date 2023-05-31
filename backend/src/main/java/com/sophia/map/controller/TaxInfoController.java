@@ -7,10 +7,12 @@ import com.sophia.map.view.Marker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/tax")
@@ -32,7 +34,17 @@ public class TaxInfoController {
         return response;
     }
 
-
-    
+    @RequestMapping(value = "/chart", method = RequestMethod.GET)
+    public Response getChartById(@RequestParam Integer id) {
+        Response response = new Response();
+        try {
+            Map<String, Object> data = taxInfoService.getChart(id);
+            response.setData(data);
+        } catch (Exception e) {
+            response.setErrorInfo(e.getMessage());
+            response.setCode(Constant.NOK);
+        }
+        return response;
+    }
 
 }
