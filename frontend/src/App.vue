@@ -12,8 +12,6 @@ import {fetchChart, fetchData} from "./api";
 import {onMounted} from "vue";
 import * as echarts from 'echarts'
 
-
-
 let BM;
 let map;
 let topChart;
@@ -30,6 +28,7 @@ maps.then(() => {
   fetchData().then(res => {
     // console.log(res)
     const responseMarkers = res.data
+    // 遍历数据
     responseMarkers.forEach((item) => {
       const id = item["id"];
       // 社会信用代码
@@ -48,10 +47,11 @@ maps.then(() => {
       let marker = BM.marker([latitude, longitude])
           .bindTooltip(taxPersonName)
           // 纳税人名称、行业、主管局
-          .bindPopup('<p>纳税人名称：' + taxPersonName + '</br>行业：' + industryName + '</br>主管局：' + supervisionUnit + '</br>')
+          .bindPopup('<p><b>纳税人名称：</b>' + taxPersonName + '</br><b>行业</b>：' + industryName + '</br><b>主管局</b>：' + supervisionUnit + '</br>')
           .addTo(map);
       marker.openPopup()
       marker.id = id
+      // 点击之后的操作
       marker.addEventListener("click", () => {
         // marker的ID，可以通过这个来查数据
         console.log(marker.id)
@@ -62,6 +62,40 @@ maps.then(() => {
       })
     })
   })
+  let drawnItems = new BM.FeatureGroup();
+  //添加在地图上
+  map.addLayer(drawnItems);
+  // 为多边形设置一个标题
+  BM.drawLocal.draw.toolbar.buttons.polygon = '添加一个多边形';
+  //实例化鼠标绘制的控件
+  var drawControl = new BM.Control.Draw({
+    position: 'topright',//位置
+    //控制绘制的图形
+    draw: {
+      polyline: {
+        //单独设置线的颜色为红色，其它为默认颜色
+        shapeOptions:{
+          color:'red'
+        }
+      },
+      polygon: true,
+      circle: true,
+      marker: true
+    },
+    edit: { featureGroup: drawnItems }
+  });
+
+  map.addControl(drawControl);
+  //监听绘画完成事件
+  map.on(BM.Draw.Event.CREATED, (e) => {
+    let type = e.layerType, layer = e.layer;
+    if (type === 'marker') {
+      //如果是标注，实现一个点击出现的提示
+      layer.bindPopup('A popup!');
+    }
+    drawnItems.addLayer(layer);
+  });
+
 })
 
 
