@@ -1,6 +1,11 @@
 server:
   port: 8080
 
+logging:
+  level:
+    root: info
+    com.sophia.map.*: debug
+
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver

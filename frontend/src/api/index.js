@@ -20,3 +20,11 @@ export const fetchChart = (id) => {
         method: 'get'
     });
 }
+
+export const fetchChartByIds = (data) => {
+    return request({
+        url: '/tax/ids',
+        method: 'post',
+        data
+    });
+}

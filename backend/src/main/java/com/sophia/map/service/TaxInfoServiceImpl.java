@@ -1,13 +1,18 @@
 package com.sophia.map.service;
 
+import com.sophia.map.common.Pair;
+import com.sophia.map.common.Request;
 import com.sophia.map.dao.CompanyInfoDao;
 import com.sophia.map.entity.CompanyInfo;
 import com.sophia.map.entity.TaxInfo;
 import com.sophia.map.view.Marker;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,6 +28,7 @@ import static com.sophia.map.common.Constant.XAXIS_NAME;
 import static com.sophia.map.common.Constant.YAXIS_NAME;
 
 @Service
+@Slf4j
 public class TaxInfoServiceImpl implements TaxInfoService {
 
     @Resource
@@ -46,7 +52,7 @@ public class TaxInfoServiceImpl implements TaxInfoService {
         return markers;
     }
 
-    private Map<String, Object> getChart(String title, List<String> xAxis, List<Long> yAxis) {
+    private Map<String, Object> getChart(String title, Collection<Integer> xAxis, List<Long> yAxis) {
         Map<String, Object> map = new HashMap<>();
         map.put(TITLE_NAME, title);
         map.put(XAXIS_NAME, xAxis);
@@ -54,23 +60,11 @@ public class TaxInfoServiceImpl implements TaxInfoService {
         return map;
     }
 
-
-    @Override
-    public Map<String, Object> getChart(Integer id) {
-        CompanyInfo companyInfo = companyInfoDao.getCompanyInfoById(id);
-//        String taxPersonName = companyInfo.getTaxPersonName();
-        String salesTitle = "【" + SALES + "】";
-        String taxTitle = "【" + TAXES + "】";
-        Set<TaxInfo> taxInfos = companyInfo.getTaxInfos();
-        List<String> years = new LinkedList<>();
-        List<Long> sales = new LinkedList<>();
-        List<Long> taxes = new LinkedList<>();
-        for (TaxInfo info : taxInfos) {
-            years.add(info.getYear());
-            sales.add(info.getSalesRevenue());
-            taxes.add(info.getTaxRevenue());
-        }
-        // 组合数据
+    private Map<String, Object> setchartMap(String salesTitle, String taxTitle, Map<Integer, Pair<Long, Long>> map) {
+        Pair<Collection<Integer>, Pair<List<Long>, List<Long>>> pair = getYearMap(map);
+        Collection<Integer> years = pair.getFirst();
+        List<Long> sales = pair.getSecond().getFirst();
+        List<Long> taxes = pair.getSecond().getSecond();
         Map<String, Object> salesChart = getChart(salesTitle, years, sales);
         Map<String, Object> taxesChart = getChart(taxTitle, years, taxes);
         Map<String, Object> chartMap = new HashMap<>();
@@ -79,5 +73,105 @@ public class TaxInfoServiceImpl implements TaxInfoService {
         return chartMap;
     }
 
+
+    private Map<Integer, Pair<Long, Long>> getLineData(List<TaxInfo> taxInfos) {
+        Map<Integer, Pair<Long, Long>> map = new HashMap<>();
+        // 排序，保证数据按照从大到小排
+        Collections.sort(taxInfos);
+        for (TaxInfo info : taxInfos) {
+            Integer year = info.getYear();
+            log.debug("year is {}", year);
+            Long salesRevenue = info.getSalesRevenue();
+            Long taxRevenue = info.getTaxRevenue();
+            log.debug("sales revenue = {}", salesRevenue);
+            log.debug("tax revenue = {}", taxRevenue);
+            map.put(year, new Pair<>(salesRevenue, taxRevenue));
+        }
+        return map;
+    }
+
+
+    private Pair<Collection<Integer>, Pair<List<Long>, List<Long>>> getYearMap(Map<Integer, Pair<Long, Long>> map) {
+        Set<Integer> years = map.keySet();
+        List<Long> sales = new LinkedList<>();
+        List<Long> taxes = new LinkedList<>();
+        for (Integer year : years) {
+            Pair<Long, Long> pair = map.get(year);
+            sales.add(pair.getFirst());
+            taxes.add(pair.getSecond());
+        }
+        return new Pair<>(years, new Pair<>(sales, taxes));
+    }
+
+
+    @Override
+    public Map<String, Object> getChart(Integer id) {
+        CompanyInfo companyInfo = companyInfoDao.getCompanyInfoById(id);
+        log.debug("companyInfo is {}", companyInfo);
+        String salesTitle = "【" + SALES + "】";
+        String taxTitle = "【" + TAXES + "】";
+        List<TaxInfo> taxInfos = companyInfo.getTaxInfos();
+        Map<Integer, Pair<Long, Long>> map = getLineData(taxInfos);
+        // 组合数据
+        return setchartMap(salesTitle, taxTitle, map);
+    }
+
+    @Override
+    public Map<String, Object> getChartByIds(Request request) {
+        Float x1 = request.getX1();
+        Float x2 = request.getX2();
+        Float y1 = request.getY1();
+        Float y2 = request.getY2();
+        log.debug("x1 = {}, x2 = {}, y1 = {}, y2 = {}", x1, x2, y1, y2);
+        // 这里还是查询所有的数据做数据过滤
+        List<CompanyInfo> companyInfos = companyInfoDao.findAll();
+        log.info("total size is {}", companyInfos.size());
+        List<CompanyInfo> infos = new ArrayList<>();
+        for (CompanyInfo info : companyInfos) {
+            Integer id = info.getId();
+            Float longitude = info.getLongitude();
+            Float latitude = info.getLatitude();
+            if (longitude >= y1 && longitude <= y2 && latitude >= x1 && latitude <= x2) {
+                log.debug("id = {} ============> longitude = {}, latitude = {}", id, longitude, latitude);
+                infos.add(info);
+            }
+        }
+        Map<Integer, Pair<Long, Long>> map = getChartInfo(infos);
+        String salesTitle = "【" + SALES + "】";
+        String taxTitle = "【" + TAXES + "】";
+        // 组合数据
+        return setchartMap(salesTitle, taxTitle, map);
+    }
+
+    private Map<Integer, Pair<Long, Long>> getChartInfo(List<CompanyInfo> infos) {
+        log.info("filter marker size = {}", infos.size());
+        Map<Integer, Pair<Long, Long>> map = new HashMap<>();
+        List<Map<Integer, Pair<Long, Long>>> markers = new ArrayList<>();
+        for (CompanyInfo info : infos) {
+            log.info("id = {}", info.getId());
+            List<TaxInfo> taxInfos = info.getTaxInfos();
+            Map<Integer, Pair<Long, Long>> lineMap = getLineData(taxInfos);
+            markers.add(lineMap);
+        }
+        for (Map<Integer, Pair<Long, Long>> marker : markers) {
+            for (Map.Entry<Integer, Pair<Long, Long>> entry : marker.entrySet()) {
+                Integer year = entry.getKey();
+                // 销售和税收数据
+                Pair<Long, Long> pair = entry.getValue();
+                if (map.containsKey(year)) {
+                    Pair<Long, Long> oldPair = map.get(year);
+                    Long sales = oldPair.getFirst() + pair.getFirst();
+                    Long taxes = oldPair.getSecond() + pair.getSecond();
+                    map.put(year, new Pair<>(sales, taxes));
+                } else {
+                    map.put(year, entry.getValue());
+                }
+            }
+        }
+        for (Map.Entry<Integer, Pair<Long, Long>> entry : map.entrySet()) {
+            log.warn("key = {}, value = {}", entry.getKey(), entry.getValue());
+        }
+        return map;
+    }
 
 }

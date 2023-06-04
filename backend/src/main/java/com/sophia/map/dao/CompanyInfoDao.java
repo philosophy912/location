@@ -4,6 +4,8 @@ import com.sophia.map.entity.CompanyInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.util.List;
+
 /*
  * @author lizhe
  * @email lizhe@bdstar.com
@@ -11,4 +13,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
  */
 public interface CompanyInfoDao extends JpaRepository<CompanyInfo, Integer>, JpaSpecificationExecutor<CompanyInfo> {
     CompanyInfo getCompanyInfoById(Integer id);
+
 }

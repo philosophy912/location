@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface TaxInfoDao  extends JpaRepository<TaxInfo, Integer>, JpaSpecificationExecutor<TaxInfo> {
 
+
 }

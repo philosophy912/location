@@ -15,8 +15,8 @@ import javax.annotation.Resource;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 
 /*
  * @author lizhe
@@ -34,11 +34,11 @@ public class LocationInfoDaoTestCase {
     private final Path path = Paths.get("D:\\Workspace\\github\\location\\backend\\src\\test\\resources\\企业名单.xlsx");
 
 
-    private Set<TaxInfo> generatorTaxInfo() {
-        Set<TaxInfo> taxInfos = new HashSet<>();
+    private List<TaxInfo> generatorTaxInfo() {
+        List<TaxInfo> taxInfos = new LinkedList<>();
         for (int i = 0; i < 3; i++) {
             TaxInfo taxInfo = new TaxInfo();
-            taxInfo.setYear("202" + i);
+            taxInfo.setYear(Integer.valueOf("202" + i));
             long taxRevenue = NumericUtils.randomLong(3000, 10000);
             taxInfo.setTaxRevenue(taxRevenue);
             Long salesRevenue = taxRevenue * NumericUtils.randomLong(10, 20);

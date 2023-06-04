@@ -13,6 +13,8 @@ public class Constant {
 
     public static final String TAXES = "税收图";
 
+    public static final String YEAR_NAME = "year";
+
     public static final String TITLE_NAME = "title";
 
     public static final String SALES_NAME = "sales";

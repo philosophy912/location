@@ -8,7 +8,7 @@
 
 <script setup lang="js">
 import maps from './map.js'
-import {fetchChart, fetchData} from "./api";
+import {fetchChart, fetchChartByIds, fetchData} from "./api";
 import {onMounted} from "vue";
 import * as echarts from 'echarts'
 
@@ -16,6 +16,7 @@ let BM;
 let map;
 let topChart;
 let bottomChart;
+
 
 maps.then(() => {
   BM = window.BM
@@ -43,23 +44,24 @@ maps.then(() => {
       const longitude = item["longitude"];
       // 纬度信息
       const latitude = item["latitude"];
-      // 前台利用数据展示  {title: address, zIndexOffset: 1000}
-      let marker = BM.marker([latitude, longitude])
-          .bindTooltip(taxPersonName)
-          // 纳税人名称、行业、主管局
-          .bindPopup('<p><b>纳税人名称：</b>' + taxPersonName + '</br><b>行业</b>：' + industryName + '</br><b>主管局</b>：' + supervisionUnit + '</br>')
-          .addTo(map);
-      marker.openPopup()
-      marker.id = id
-      // 点击之后的操作
-      marker.addEventListener("click", () => {
-        // marker的ID，可以通过这个来查数据
-        console.log(marker.id)
-        let id = marker.id
-        updateChart(id)
-        // echartsInit()
-        // echartsInit1()
-      })
+      // 调试，只显示某个ID的marker点
+      //if (id === 6 || id === 42 || id === 52) {
+        // 前台利用数据展示  {title: address, zIndexOffset: 1000}
+        let marker = BM.marker([latitude, longitude])
+            .bindTooltip(taxPersonName)
+            // 纳税人名称、行业、主管局
+            .bindPopup('<p><b>纳税人名称：</b>' + taxPersonName + '</br><b>行业</b>：' + industryName + '</br><b>主管局</b>：' + supervisionUnit + '</br>')
+            .addTo(map);
+        marker.openPopup()
+        marker.id = id
+        // 点击之后的操作
+        marker.addEventListener("click", () => {
+          // marker的ID，可以通过这个来查数据
+          console.log(marker.id)
+          let id = marker.id
+          updateChart(id)
+        })
+      //}
     })
   })
   let drawnItems = new BM.FeatureGroup();
@@ -68,30 +70,36 @@ maps.then(() => {
   // 为多边形设置一个标题
   BM.drawLocal.draw.toolbar.buttons.polygon = '添加一个多边形';
   //实例化鼠标绘制的控件
-  var drawControl = new BM.Control.Draw({
+  let drawControl = new BM.Control.Draw({
     position: 'topright',//位置
     //控制绘制的图形
+    // TODO 如何去掉圆形不清楚
     draw: {
-      polyline: {
-        //单独设置线的颜色为红色，其它为默认颜色
-        shapeOptions:{
-          color:'red'
-        }
-      },
-      polygon: true,
-      circle: true,
-      marker: true
+      polyline: false,
+      polygon: false,
+      rectangle: true,
+      circle: false,
+      marker: false
     },
     edit: { featureGroup: drawnItems }
   });
-
   map.addControl(drawControl);
   //监听绘画完成事件
   map.on(BM.Draw.Event.CREATED, (e) => {
     let type = e.layerType, layer = e.layer;
-    if (type === 'marker') {
-      //如果是标注，实现一个点击出现的提示
-      layer.bindPopup('A popup!');
+    if (type === 'rectangle') {
+      let position = layer.getBounds()
+      // 这里获取到了左上角和右下角的坐标点
+      let left_top = position.getNorthWest()
+      let right_bottom = position.getSouthEast()
+      // 过滤在框内的坐标点
+      // console.log(left_top.lat)
+      // console.log(left_top.lng)
+      // console.log(right_bottom.lat)
+      // console.log(right_bottom.lng)
+      updateChartByIds(right_bottom.lat, left_top.lng, left_top.lat, right_bottom.lng)
+    } else {
+      console.log("不支持画圆，后续要去掉")
     }
     drawnItems.addLayer(layer);
   });
@@ -105,15 +113,70 @@ onMounted(() => {
 })
 
 
+const updateChartByIds = (x1, y1, x2, y2) => {
+  const data = {"x1": x1, "y1": y1, "x2": x2, "y2": y2}
+  console.log(JSON.stringify(data))
+  fetchChartByIds(data).then(res => {
+    const res_data = res.data
+    const sales = res_data.taxes
+    const taxes = res_data.sales
+    const option1 = {
+      title: {
+        text: sales.title
+      },
+      xAxis: {
+        data: sales.xAxis
+      },
+      yAxis: {},
+      series: [
+        {
+          type: 'bar',
+          data: sales.yAxis,
+          itemStyle: {
+            boarderRadius: 5,
+            borderWidth: 1,
+            borderType: 'solid',
+            borderColor: '#73c0de',
+            shadowColor: '#5470c6',
+            shadowBlur: 3
+          }
+        }
+      ]
+    }
+    const option2 = {
+      title: {
+        text: taxes.title
+      },
+      xAxis: {
+        data: taxes.xAxis
+      },
+      yAxis: {},
+      series: [
+        {
+          type: 'bar',
+          data: taxes.yAxis,
+          itemStyle: {
+            boarderRadius: 5,
+            borderWidth: 1,
+            borderType: 'solid',
+            borderColor: '#73c0de',
+            shadowColor: '#5470c6',
+            shadowBlur: 3
+          }
+        }
+      ]
+    }
+    topChart.setOption(option1);
+    bottomChart.setOption(option2);
+  })
+}
+
+
 const updateChart = (id) => {
   fetchChart(id).then(res => {
     const data = res.data
-    // console.log(data)
     const sales = data.taxes
     const taxes = data.sales
-    // console.log(sales.yAxis)
-    // console.log(typeof (sales.yAxis))
-    // console.log(taxes)
     const option1 = {
       title: {
         text: sales.title
