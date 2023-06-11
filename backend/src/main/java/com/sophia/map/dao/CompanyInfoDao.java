@@ -13,5 +13,6 @@ import java.util.List;
  */
 public interface CompanyInfoDao extends JpaRepository<CompanyInfo, Integer>, JpaSpecificationExecutor<CompanyInfo> {
     CompanyInfo getCompanyInfoById(Integer id);
+    List<CompanyInfo> findCompanyInfosByTaxPersonNameLikeIgnoreCase(String name);
 
 }

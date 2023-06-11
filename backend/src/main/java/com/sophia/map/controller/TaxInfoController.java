@@ -6,6 +6,7 @@ import com.sophia.map.common.Response;
 import com.sophia.map.service.TaxInfoService;
 import com.sophia.map.view.Marker;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -36,6 +37,27 @@ public class TaxInfoController {
         }
         return response;
     }
+
+    @RequestMapping(value = "/all/name", method = RequestMethod.POST)
+    public Response getMarkersByName(@RequestBody Request request) {
+        Response response = new Response();
+        try {
+            String name = request.getName();
+            if (Strings.isEmpty(name)) {
+                response.setCode(Constant.NOK);
+                response.setErrorInfo("name is empty");
+            } else {
+                List<Marker> markers = taxInfoService.queryMarkersByName(name);
+                response.setData(markers);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.setErrorInfo(e.getMessage());
+            response.setCode(Constant.NOK);
+        }
+        return response;
+    }
+
 
     @RequestMapping(value = "/chart", method = RequestMethod.GET)
     public Response getChartById(@RequestParam Integer id) {

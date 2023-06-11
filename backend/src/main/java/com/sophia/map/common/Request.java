@@ -22,4 +22,6 @@ public class Request implements Serializable {
     private Float x2;
     private Float y2;
 
+    private String name;
+
 }

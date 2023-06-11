@@ -34,9 +34,7 @@ public class TaxInfoServiceImpl implements TaxInfoService {
     @Resource
     private CompanyInfoDao companyInfoDao;
 
-    @Override
-    public List<Marker> queryMarkers() {
-        List<CompanyInfo> companyInfos = companyInfoDao.findAll();
+    private List<Marker> setMarkers(List<CompanyInfo> companyInfos) {
         List<Marker> markers = new ArrayList<>();
         for (CompanyInfo info : companyInfos) {
             Marker marker = new Marker();
@@ -49,6 +47,15 @@ public class TaxInfoServiceImpl implements TaxInfoService {
             marker.setLatitude(info.getLatitude());
             markers.add(marker);
         }
+        return markers;
+    }
+
+
+    @Override
+    public List<Marker> queryMarkers() {
+        List<CompanyInfo> companyInfos = companyInfoDao.findAll();
+        List<Marker> markers = setMarkers(companyInfos);
+        log.debug("markers size is {}", markers.size());
         return markers;
     }
 
@@ -141,6 +148,13 @@ public class TaxInfoServiceImpl implements TaxInfoService {
         String taxTitle = "【" + TAXES + "】";
         // 组合数据
         return setchartMap(salesTitle, taxTitle, map);
+    }
+
+    @Override
+    public List<Marker> queryMarkersByName(String name) {
+        String queryName = "%" + name + "%";
+        List<CompanyInfo> companyInfos = companyInfoDao.findCompanyInfosByTaxPersonNameLikeIgnoreCase(queryName);
+        return setMarkers(companyInfos);
     }
 
     private Map<Integer, Pair<Long, Long>> getChartInfo(List<CompanyInfo> infos) {

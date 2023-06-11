@@ -14,4 +14,6 @@ public interface TaxInfoService {
 
 
     Map<String, Object> getChartByIds(Request request);
+
+    List<Marker> queryMarkersByName(String name);
 }
