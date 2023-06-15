@@ -24,11 +24,23 @@ public class TaxInfoController {
     @Resource
     private TaxInfoService taxInfoService;
 
-    @RequestMapping(value = "/all", method = RequestMethod.GET)
-    public Response getMarkers() {
+    /**
+     * 这个接口主要作用是获取markers
+     *
+     * @param request， 请求参数
+     * @return Response
+     */
+    @RequestMapping(value = "/markers", method = RequestMethod.POST)
+    public Response getMarkers(@RequestBody Request request) {
         Response response = new Response();
         try {
-            List<Marker> markers = taxInfoService.queryMarkers();
+            String name = request.getName();
+            List<Marker> markers;
+            if (Strings.isEmpty(name)) {
+                markers = taxInfoService.queryMarkers();
+            } else {
+                markers = taxInfoService.queryMarkersByName(name);
+            }
             response.setData(markers);
         } catch (Exception e) {
             e.printStackTrace();
@@ -38,18 +50,17 @@ public class TaxInfoController {
         return response;
     }
 
-    @RequestMapping(value = "/all/name", method = RequestMethod.POST)
-    public Response getMarkersByName(@RequestBody Request request) {
+    /**
+     * 获取工业园区的种类(非重复)
+     *
+     * @return 工业园区的所有名称
+     */
+    @RequestMapping(value = "/industryPark", method = RequestMethod.GET)
+    public Response getIndustryPark() {
         Response response = new Response();
         try {
-            String name = request.getName();
-            if (Strings.isEmpty(name)) {
-                response.setCode(Constant.NOK);
-                response.setErrorInfo("name is empty");
-            } else {
-                List<Marker> markers = taxInfoService.queryMarkersByName(name);
-                response.setData(markers);
-            }
+            List<String> data = taxInfoService.getIndustryPark();
+            response.setData(data);
         } catch (Exception e) {
             e.printStackTrace();
             response.setErrorInfo(e.getMessage());
@@ -58,7 +69,11 @@ public class TaxInfoController {
         return response;
     }
 
-
+    /**
+     * 根据mark点的信息获取税收数据
+     * @param id mark的点数据
+     * @return marker点的税收信息（单点)
+     */
     @RequestMapping(value = "/chart", method = RequestMethod.GET)
     public Response getChartById(@RequestParam Integer id) {
         log.debug("request id is {}", id);
@@ -74,7 +89,12 @@ public class TaxInfoController {
         return response;
     }
 
-    @RequestMapping(value = "ids", method = RequestMethod.POST)
+    /**
+     * 画框获取marker点，然后统计所有点的税收数据
+     * @param request 请求数据，其中x1, x2, y1, y2不能为空
+     * @return 画框内的marker点的税收信息
+     */
+    @RequestMapping(value = "/ids", method = RequestMethod.POST)
     public Response getChartByIds(@RequestBody Request request) {
         Response response = new Response();
         log.info("request is {}", request);
@@ -87,6 +107,33 @@ public class TaxInfoController {
             response.setCode(Constant.NOK);
         }
         return response;
+    }
+
+    /**
+     * 获取某个工业园区的税收信息
+     * @param request 请求数据，name不能为空，这个地方是全匹配
+     * @return 工业园区税收信息
+     */
+    @RequestMapping(value = "/area", method = RequestMethod.POST)
+    public Response getChartByArea(@RequestBody Request request) {
+        Response response = new Response();
+        log.info("request is {}", request);
+        try {
+            String name = request.getName();
+            if (Strings.isEmpty(name)) {
+                response.setCode(Constant.NOK);
+                response.setMessage("can not found markers when name is null");
+            } else {
+                Map<String, Object> data = taxInfoService.getChartByIndustryParkName(name);
+                response.setData(data);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.setErrorInfo(e.getMessage());
+            response.setCode(Constant.NOK);
+        }
+        return response;
+
     }
 
 }

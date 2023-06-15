@@ -157,6 +157,22 @@ public class TaxInfoServiceImpl implements TaxInfoService {
         return setMarkers(companyInfos);
     }
 
+    @Override
+    public List<String> getIndustryPark() {
+        return companyInfoDao.findIndustryParks();
+    }
+
+    @Override
+    public Map<String, Object> getChartByIndustryParkName(String name) {
+        List<CompanyInfo> infos = companyInfoDao.findCompanyInfosByIndustryPark(name);
+        log.info("total size is {}", infos.size());
+        Map<Integer, Pair<Long, Long>> map = getChartInfo(infos);
+        String salesTitle = "【" + SALES + "】";
+        String taxTitle = "【" + TAXES + "】";
+        // 组合数据
+        return setchartMap(salesTitle, taxTitle, map);
+    }
+
     private Map<Integer, Pair<Long, Long>> getChartInfo(List<CompanyInfo> infos) {
         log.info("filter marker size = {}", infos.size());
         Map<Integer, Pair<Long, Long>> map = new HashMap<>();

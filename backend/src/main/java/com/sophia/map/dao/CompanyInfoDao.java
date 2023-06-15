@@ -3,6 +3,7 @@ package com.sophia.map.dao;
 import com.sophia.map.entity.CompanyInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -13,6 +14,13 @@ import java.util.List;
  */
 public interface CompanyInfoDao extends JpaRepository<CompanyInfo, Integer>, JpaSpecificationExecutor<CompanyInfo> {
     CompanyInfo getCompanyInfoById(Integer id);
+
     List<CompanyInfo> findCompanyInfosByTaxPersonNameLikeIgnoreCase(String name);
+
+    List<CompanyInfo> findCompanyInfosByIndustryPark(String name);
+
+    @Query("select distinct industryPark from CompanyInfo")
+    List<String> findIndustryParks();
+
 
 }

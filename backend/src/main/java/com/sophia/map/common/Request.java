@@ -21,7 +21,8 @@ public class Request implements Serializable {
     private Float y1;
     private Float x2;
     private Float y2;
-
+    // 名字， 支持工业园区名字（精确查询)和纳税人的名字（模糊查询）
     private String name;
+
 
 }

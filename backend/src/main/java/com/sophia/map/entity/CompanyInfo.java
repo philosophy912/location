@@ -47,8 +47,19 @@ public class CompanyInfo implements Serializable {
     // 纬度信息
     @Column(name = "Latitude", nullable = false)
     private Float latitude;
-
+    // 区县
+    @Column(name = "County")
+    private String county;
+    // 乡镇
+    @Column(name = "Township")
+    private String township;
+    // 工业园区
+    @Column(name = "Industry_Park", nullable = false)
+    private String industryPark;
+    // 税收情况
     @OneToMany(cascade = {CascadeType.PERSIST})
     @JoinColumn(name = "Location_Info_Id")
     private List<TaxInfo> taxInfos = new LinkedList<>();
+
+
 }
