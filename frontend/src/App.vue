@@ -25,8 +25,9 @@ maps.then(() => {
   let latlng = BM.latLng(28.77064, 104.62922);
   BM.Config.HTTP_URL = 'http://localhost:9000';
   map = BM.map('map', 'bigemap.baidu-map', {crs: BM.CRS.Baidu, center: latlng, zoom: 14, zoomControl: true});
+  let data = {}
   // 后台获取数据
-  fetchData().then(res => {
+  fetchData(data).then(res => {
     // console.log(res)
     const responseMarkers = res.data
     // 遍历数据

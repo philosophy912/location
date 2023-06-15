@@ -12,7 +12,7 @@ import request from '../utils/request';
 export const fetchData = (data) => {
     return request({
         url: '/tax/markers',
-        method: post,
+        method: 'post',
         data
     });
 }
@@ -20,7 +20,7 @@ export const fetchData = (data) => {
 export const fetchIndustryPark = () => {
     return request({
         url: '/tax/industryPark',
-        method: get
+        method: 'get'
     })
 }
 // 这里是获取某个mark点的图表数据， get方法，传入的参数是marker的id，对应就是数据库中表T_COMPANY_INFO的ID
