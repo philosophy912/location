@@ -2,7 +2,8 @@
   <div id="map"></div>
   <div id="myChart">
     <div id="user">
-      <el-select v-model="value" class="m-2" placeholder="请选择区域" size="large" @change="changeSelectValue" clearable>
+      <el-select v-model="value" class="m-2" placeholder="请选择区域" size="large" @change="changeSelectValue"
+                 clearable>
         <el-option
             v-for="item in options"
             :key="item.value"
@@ -20,7 +21,15 @@
 
 <script setup lang="js">
 import maps from './map.js'
-import {fetchChart, fetchChartByArea, fetchChartByIds, fetchData, fetchIndustryPark} from "./api";
+import {
+  fetchArea,
+  fetchChart,
+  fetchChartByArea,
+  fetchChartByIds,
+  fetchChartByMarkerIds,
+  fetchData,
+  fetchIndustryPark
+} from "./api";
 import {onMounted, ref} from "vue";
 import * as echarts from 'echarts'
 
@@ -57,7 +66,7 @@ const getIndustryPark = () => {
 const changeSelectValue = () => {
   const selectValue = value.value
   console.log(selectValue)
-  if (selectValue !== ''){
+  if (selectValue !== '') {
     const request = {"name": selectValue}
     fetchChartByArea(request).then(res => {
       const res_data = res.data
@@ -127,6 +136,70 @@ const setMarker = (name) => {
   })
 }
 
+const drawPloyGons = () => {
+  fetchArea().then(res => {
+    const data = res.data
+    // console.log(data)
+    data.forEach(latlngs => {
+      // console.log(latlngs)
+      drawPloyGon(latlngs)
+    })
+  })
+}
+
+const drawPloyGon = (latlngs) => {
+  //创建多边形，并设置填充颜色 ，具体详细API请参见：http://www.bigemap.com/offlinemaps/api/#polygon
+  let polygon = BM.polygon(latlngs, {color: '#369'}).addTo(map);
+  polygon.on("click", (e) => {
+    // 能够获取到经纬度
+    // console.log(e.latlng)
+    const ids = getPolygonMarkers(latlngs)
+    const requestData = {"ids": ids}
+    fetchChartByMarkerIds(requestData).then(res => {
+      const res_data = res.data
+      const sales = res_data.taxes
+      const taxes = res_data.sales
+      const option1 = generatorOption(sales.title, sales.xAxis, sales.yAxis)
+      const option2 = generatorOption(taxes.title, taxes.xAxis, taxes.yAxis)
+      topChart.setOption(option1);
+      bottomChart.setOption(option2);
+    })
+  })
+}
+
+const getPolygonMarkers = (latlngs) => {
+  let polygonMarkers = []
+  markers.forEach(v => {
+    let latlng = v.getLatLng()
+    //点的平面坐标
+    let point = [latlng.lat, latlng.lng]
+    // let point = map.project([latlng.lat, latlng.lng]);
+    if (pointInPolygon(point, latlngs)) {
+      polygonMarkers.push(v.id)
+    }
+  })
+  // 获取到了这个矩形框的点
+  // console.log(polygonMarkers)
+  return polygonMarkers;
+}
+
+
+const pointInPolygon = (point, polygon) => {
+  let x = point[0], y = point[1];
+  let inside = false;
+
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    let xi = polygon[i][0], yi = polygon[i][1];
+    let xj = polygon[j][0], yj = polygon[j][1];
+
+    let intersect = ((yi > y) !== (yj > y)) &&
+        (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+
 const initMap = () => {
   maps.then(() => {
     BM = window.BM
@@ -136,6 +209,7 @@ const initMap = () => {
     BM.Config.HTTP_URL = 'http://localhost:9000';
     map = BM.map('map', 'bigemap.baidu-map', {crs: BM.CRS.Baidu, center: latlng, zoom: 14, zoomControl: true});
     setMarker()
+    drawPloyGons()
     let drawnItems = new BM.FeatureGroup();
     //添加在地图上
     map.addLayer(drawnItems);

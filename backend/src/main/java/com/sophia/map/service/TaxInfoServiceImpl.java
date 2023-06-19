@@ -162,15 +162,29 @@ public class TaxInfoServiceImpl implements TaxInfoService {
         return companyInfoDao.findIndustryParks();
     }
 
-    @Override
-    public Map<String, Object> getChartByIndustryParkName(String name) {
-        List<CompanyInfo> infos = companyInfoDao.findCompanyInfosByIndustryPark(name);
-        log.info("total size is {}", infos.size());
+
+    private Map<String, Object> parseCompanyInfos(List<CompanyInfo> infos) {
+        log.debug("total size is {}", infos.size());
         Map<Integer, Pair<Long, Long>> map = getChartInfo(infos);
         String salesTitle = "【" + SALES + "】";
         String taxTitle = "【" + TAXES + "】";
         // 组合数据
         return setchartMap(salesTitle, taxTitle, map);
+    }
+
+    @Override
+    public Map<String, Object> getChartByIndustryParkName(String name) {
+        List<CompanyInfo> infos = companyInfoDao.findCompanyInfosByIndustryPark(name);
+        return parseCompanyInfos(infos);
+    }
+
+    @Override
+    public Map<String, Object> getChartByMarkerIds(List<Integer> ids) {
+        List<CompanyInfo> infos = new LinkedList<>();
+        for (Integer id : ids) {
+            infos.add(companyInfoDao.getCompanyInfoById(id));
+        }
+        return parseCompanyInfos(infos);
     }
 
     private Map<Integer, Pair<Long, Long>> getChartInfo(List<CompanyInfo> infos) {

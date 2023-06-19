@@ -136,4 +136,26 @@ public class TaxInfoController {
 
     }
 
+    /**
+     * 根据所有的Marker点来查询数据
+     * @param request 请求数据，ids不能为空，这个地方是全匹配
+     * @return
+     */
+
+    @RequestMapping(value = "/markerIds", method = RequestMethod.POST)
+    public Response getChartByMarkerIds(@RequestBody Request request) {
+        Response response = new Response();
+        log.info("request is {}", request);
+        try {
+            List<Integer> ids = request.getIds();
+            Map<String, Object> data = taxInfoService.getChartByMarkerIds(ids);
+            response.setData(data);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.setErrorInfo(e.getMessage());
+            response.setCode(Constant.NOK);
+        }
+        return response;
+    }
+
 }

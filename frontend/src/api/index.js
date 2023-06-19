@@ -46,3 +46,18 @@ export const fetchChartByArea = (data) => {
         data
     });
 }
+
+export const fetchArea = () => {
+    return request({
+        url: './location.json',
+        method: 'get'
+    })
+}
+
+export const fetchChartByMarkerIds = (data) => {
+    return request({
+        url: '/tax/markerIds',
+        method: 'post',
+        data
+    });
+}
