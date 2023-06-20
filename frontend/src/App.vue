@@ -140,16 +140,19 @@ const drawPloyGons = () => {
   fetchArea().then(res => {
     const data = res.data
     // console.log(data)
-    data.forEach(latlngs => {
-      // console.log(latlngs)
-      drawPloyGon(latlngs)
+    data.forEach(area => {
+      // console.log(area.name)
+      drawPloyGon(area)
     })
   })
 }
 
-const drawPloyGon = (latlngs) => {
+const drawPloyGon = (area) => {
+  let latlngs = area.location
   //创建多边形，并设置填充颜色 ，具体详细API请参见：http://www.bigemap.com/offlinemaps/api/#polygon
-  let polygon = BM.polygon(latlngs, {color: '#369'}).addTo(map);
+  let polygon = BM.polygon(latlngs, {weight: 1, color: '#369'}).addTo(map)
+  polygon.bindPopup(area.name)
+  // polygon.openPopup()
   polygon.on("click", (e) => {
     // 能够获取到经纬度
     // console.log(e.latlng)
