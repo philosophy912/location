@@ -35,11 +35,14 @@ public class TaxInfoController {
         Response response = new Response();
         try {
             String name = request.getName();
+            String area = request.getArea();
             List<Marker> markers;
-            if (Strings.isEmpty(name)) {
-                markers = taxInfoService.queryMarkers();
-            } else {
+            if (Strings.isNotEmpty(name)) {
                 markers = taxInfoService.queryMarkersByName(name);
+            }else if(Strings.isNotEmpty(area)){
+                markers = taxInfoService.queryMarkersByArea(area);
+            }else{
+                markers = taxInfoService.queryMarkers();
             }
             response.setData(markers);
         } catch (Exception e) {
@@ -71,6 +74,7 @@ public class TaxInfoController {
 
     /**
      * 根据mark点的信息获取税收数据
+     *
      * @param id mark的点数据
      * @return marker点的税收信息（单点)
      */
@@ -91,6 +95,7 @@ public class TaxInfoController {
 
     /**
      * 画框获取marker点，然后统计所有点的税收数据
+     *
      * @param request 请求数据，其中x1, x2, y1, y2不能为空
      * @return 画框内的marker点的税收信息
      */
@@ -111,6 +116,7 @@ public class TaxInfoController {
 
     /**
      * 获取某个工业园区的税收信息
+     *
      * @param request 请求数据，name不能为空，这个地方是全匹配
      * @return 工业园区税收信息
      */
@@ -138,6 +144,7 @@ public class TaxInfoController {
 
     /**
      * 根据所有的Marker点来查询数据
+     *
      * @param request 请求数据，ids不能为空，这个地方是全匹配
      * @return
      */

@@ -23,4 +23,5 @@ public interface CompanyInfoDao extends JpaRepository<CompanyInfo, Integer>, Jpa
     List<String> findIndustryParks();
 
 
+
 }

@@ -25,6 +25,8 @@ public class Request implements Serializable {
     // 名字， 支持工业园区名字（精确查询)和纳税人的名字（模糊查询）
     private String name;
     private List<Integer> ids;
+    // 工业园区筛选marker
+    private String area;
 
 
 }

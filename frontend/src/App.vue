@@ -77,6 +77,10 @@ const changeSelectValue = () => {
       topChart.setOption(option1);
       bottomChart.setOption(option2);
     })
+    clearMarkers()
+    // 刷新marker
+    setMarker('', selectValue)
+
   }
 }
 
@@ -91,17 +95,19 @@ const clearMarkers = () => {
 const queryCompany = () => {
   // 获取输入框内容
   const name = input.value
-  setMarker(name)
+  // 偷懒写法，区域为空，后端以name为优先处理方式
+  setMarker(name, '')
 }
 
-const setMarker = (name) => {
+const setMarker = (name, area) => {
   // 这里先清空所有的marker，再获取数据
   clearMarkers()
-  const data = {"name": name}
+  const data = {"name": name, "area": area}
   // 后台获取数据
   fetchData(data).then(res => {
     // console.log(res)
     const responseMarkers = res.data
+    console.log('data size is ' + responseMarkers.length)
     // 遍历数据
     responseMarkers.forEach((item) => {
       const id = item["id"];

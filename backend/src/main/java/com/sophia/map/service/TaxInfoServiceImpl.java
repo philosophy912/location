@@ -187,6 +187,15 @@ public class TaxInfoServiceImpl implements TaxInfoService {
         return parseCompanyInfos(infos);
     }
 
+    @Override
+    public List<Marker> queryMarkersByArea(String area) {
+        log.debug("area is {}", area);
+        List<CompanyInfo> companyInfos = companyInfoDao.findCompanyInfosByIndustryPark(area);
+        List<Marker> markers = setMarkers(companyInfos);
+        log.debug("markers size is {}", markers.size());
+        return markers;
+    }
+
     private Map<Integer, Pair<Long, Long>> getChartInfo(List<CompanyInfo> infos) {
         log.info("filter marker size = {}", infos.size());
         Map<Integer, Pair<Long, Long>> map = new HashMap<>();
@@ -212,9 +221,9 @@ public class TaxInfoServiceImpl implements TaxInfoService {
                 }
             }
         }
-        for (Map.Entry<Integer, Pair<Long, Long>> entry : map.entrySet()) {
+        /*for (Map.Entry<Integer, Pair<Long, Long>> entry : map.entrySet()) {
             log.warn("key = {}, value = {}", entry.getKey(), entry.getValue());
-        }
+        }*/
         return map;
     }
 

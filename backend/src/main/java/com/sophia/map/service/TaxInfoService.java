@@ -22,4 +22,6 @@ public interface TaxInfoService {
     Map<String, Object> getChartByIndustryParkName(String name);
 
     Map<String, Object> getChartByMarkerIds(List<Integer> ids);
+
+    List<Marker> queryMarkersByArea(String area);
 }
