@@ -107,7 +107,7 @@ const setMarker = (name, area) => {
   fetchData(data).then(res => {
     // console.log(res)
     const responseMarkers = res.data
-    console.log('data size is ' + responseMarkers.length)
+    // console.log('data size is ' + responseMarkers.length)
     // 遍历数据
     responseMarkers.forEach((item) => {
       const id = item["id"];
@@ -142,6 +142,50 @@ const setMarker = (name, area) => {
   })
 }
 
+const collectMarkers = (latlngs) => {
+  // 这里先清空所有的marker，再获取数据
+  clearMarkers()
+  const data = {"name": ''}
+  // 后台获取数据
+  fetchData(data).then(res => {
+    // console.log(res)
+    const responseMarkers = res.data
+    // console.log('data size is ' + responseMarkers.length)
+    // 遍历数据
+    responseMarkers.forEach((item) => {
+      const id = item["id"];
+      // 社会信用代码
+      const socialCreditCode = item["socialCreditCode"];
+      // 纳税人名称
+      const taxPersonName = item["taxPersonName"];
+      // 主管局
+      const supervisionUnit = item["supervisionUnit"];
+      // 行业名称
+      const industryName = item["industryName"];
+      // 经度信息
+      const longitude = item["longitude"];
+      // 纬度信息
+      const latitude = item["latitude"];
+      // 前台利用数据展示  {title: address, zIndexOffset: 1000}
+      const marker = BM.marker([latitude, longitude])
+          .bindTooltip(taxPersonName)
+          // 纳税人名称、行业、主管局
+          .bindPopup('<p><b>纳税人名称：</b>' + taxPersonName + '</br><b>行业</b>：' + industryName + '</br><b>主管局</b>：' + supervisionUnit + '</br>')
+          .addTo(map);
+      marker.id = id
+      markers.push(marker)
+      // 点击之后的操作
+      marker.addEventListener("click", () => {
+        // marker的ID，可以通过这个来查数据
+        console.log(marker.id)
+        let id = marker.id
+        updateChart(id)
+      })
+    })
+    requestIds(latlngs)
+  })
+}
+
 const drawPloyGons = () => {
   fetchArea().then(res => {
     const data = res.data
@@ -153,6 +197,22 @@ const drawPloyGons = () => {
   })
 }
 
+const requestIds = (latlngs) => {
+  const ids = getPolygonMarkers(latlngs)
+  // console.log(ids)
+  const requestData = {"ids": ids}
+  fetchChartByMarkerIds(requestData).then(res => {
+    const res_data = res.data
+    const sales = res_data.taxes
+    const taxes = res_data.sales
+    const option1 = generatorOption(sales.title, sales.xAxis, sales.yAxis)
+    const option2 = generatorOption(taxes.title, taxes.xAxis, taxes.yAxis)
+    topChart.setOption(option1);
+    bottomChart.setOption(option2);
+  })
+}
+
+
 const drawPloyGon = (area) => {
   let latlngs = area.location
   //创建多边形，并设置填充颜色 ，具体详细API请参见：http://www.bigemap.com/offlinemaps/api/#polygon
@@ -160,19 +220,8 @@ const drawPloyGon = (area) => {
   polygon.bindPopup(area.name)
   // polygon.openPopup()
   polygon.on("click", (e) => {
-    // 能够获取到经纬度
-    // console.log(e.latlng)
-    const ids = getPolygonMarkers(latlngs)
-    const requestData = {"ids": ids}
-    fetchChartByMarkerIds(requestData).then(res => {
-      const res_data = res.data
-      const sales = res_data.taxes
-      const taxes = res_data.sales
-      const option1 = generatorOption(sales.title, sales.xAxis, sales.yAxis)
-      const option2 = generatorOption(taxes.title, taxes.xAxis, taxes.yAxis)
-      topChart.setOption(option1);
-      bottomChart.setOption(option2);
-    })
+    // 这个地方有可能是在过滤了坐标点的时候进行的，所以需要恢复坐标点
+    collectMarkers(latlngs)
   })
 }
 
