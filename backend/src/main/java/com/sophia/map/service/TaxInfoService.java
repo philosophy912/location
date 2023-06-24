@@ -2,6 +2,7 @@ package com.sophia.map.service;
 
 import com.sophia.map.common.Request;
 import com.sophia.map.view.Marker;
+import com.sophia.map.view.MarkerVo;
 
 import java.util.List;
 import java.util.Map;
@@ -24,4 +25,6 @@ public interface TaxInfoService {
     Map<String, Object> getChartByMarkerIds(List<Integer> ids);
 
     List<Marker> queryMarkersByArea(String area);
+
+    void update(MarkerVo markerVo);
 }

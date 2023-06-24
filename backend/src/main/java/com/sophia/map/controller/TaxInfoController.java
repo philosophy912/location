@@ -5,6 +5,7 @@ import com.sophia.map.common.Request;
 import com.sophia.map.common.Response;
 import com.sophia.map.service.TaxInfoService;
 import com.sophia.map.view.Marker;
+import com.sophia.map.view.MarkerVo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -146,7 +147,7 @@ public class TaxInfoController {
      * 根据所有的Marker点来查询数据
      *
      * @param request 请求数据，ids不能为空，这个地方是全匹配
-     * @return
+     * @return marker点信息
      */
 
     @RequestMapping(value = "/markerIds", method = RequestMethod.POST)
@@ -163,6 +164,21 @@ public class TaxInfoController {
             response.setCode(Constant.NOK);
         }
         return response;
+    }
+
+    @RequestMapping(value = "/insert",method = RequestMethod.POST)
+    public Response updateMarker(@RequestBody MarkerVo markerVo){
+        Response response = new Response();
+        log.info("request is {}", markerVo);
+        try {
+            taxInfoService.update(markerVo);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.setErrorInfo(e.getMessage());
+            response.setCode(Constant.NOK);
+        }
+        return response;
+
     }
 
 }

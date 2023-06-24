@@ -6,18 +6,14 @@ import com.sophia.map.dao.CompanyInfoDao;
 import com.sophia.map.entity.CompanyInfo;
 import com.sophia.map.entity.TaxInfo;
 import com.sophia.map.view.Marker;
+import com.sophia.map.view.MarkerVo;
+import com.sophia.map.view.TaxVo;
+import com.sun.org.apache.bcel.internal.generic.FADD;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static com.sophia.map.common.Constant.SALES;
 import static com.sophia.map.common.Constant.SALES_NAME;
@@ -196,6 +192,149 @@ public class TaxInfoServiceImpl implements TaxInfoService {
         return markers;
     }
 
+    private void checkInfo(Object info, String tips) {
+        if (info == null) {
+            throw new RuntimeException(tips + "不能为空");
+        }
+    }
+
+
+    private List<TaxInfo> convert(List<TaxVo> taxVos) {
+        List<TaxInfo> taxInfos = new LinkedList<>();
+        for (TaxVo vo : taxVos) {
+            TaxInfo taxInfo = new TaxInfo();
+            taxInfo.setYear(vo.getYear());
+            taxInfo.setTaxRevenue(vo.getTaxRevenue());
+            taxInfo.setSalesRevenue(vo.getSalesRevenue());
+            taxInfos.add(taxInfo);
+        }
+        return taxInfos;
+    }
+
+    private void update(List<TaxInfo> taxInfos, List<TaxVo> taxVos, boolean updateFlag) {
+        for (TaxInfo taxInfo : taxInfos) {
+            for (TaxVo taxVo : taxVos) {
+                // 年份相同更新
+                if (Objects.equals(taxInfo.getYear(), taxVo.getYear())) {
+                    // 数据不为空更新
+                    if (taxVo.getTaxRevenue() != null) {
+                        updateFlag = true;
+                        taxInfo.setTaxRevenue(taxVo.getTaxRevenue());
+                    }
+                    if (taxVo.getSalesRevenue() != null) {
+                        updateFlag = true;
+                        taxInfo.setSalesRevenue(taxVo.getSalesRevenue());
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean updateMain(CompanyInfo companyInfo, String taxPersonName, String supervisionUnit, String industryName, Float longitude, Float latitude, String country, String township, String industryPark) {
+        boolean updateFlag = false;
+        // 更新数据
+        if (taxPersonName != null) {
+            updateFlag = true;
+            companyInfo.setTaxPersonName(taxPersonName);
+        }
+        if (supervisionUnit != null) {
+            updateFlag = true;
+            companyInfo.setSupervisionUnit(supervisionUnit);
+        }
+        if (industryName != null) {
+            updateFlag = true;
+            companyInfo.setIndustryName(industryName);
+        }
+        if (longitude != null) {
+            updateFlag = true;
+            companyInfo.setLongitude(longitude);
+        }
+        if (latitude != null) {
+            updateFlag = true;
+            companyInfo.setLatitude(latitude);
+        }
+        if (country != null) {
+            updateFlag = true;
+            companyInfo.setCounty(country);
+        }
+        if (township != null) {
+            updateFlag = true;
+            companyInfo.setTownship(township);
+        }
+        if (industryPark != null) {
+            updateFlag = true;
+            companyInfo.setIndustryPark(industryPark);
+        }
+        return updateFlag;
+    }
+
+
+    private CompanyInfo setCompanyInfo(String taxPersonName, String supervisionUnit, String industryName, Float longitude, Float latitude, String industryPark, String socialCreditCode){
+        // 插入数据
+        CompanyInfo companyInfo = new CompanyInfo();
+        // 非空字段不允许为空
+        checkInfo(taxPersonName, "纳税人名称");
+        checkInfo(supervisionUnit, "主管局");
+        checkInfo(industryName, "行业名称");
+        checkInfo(longitude, "经度信息");
+        checkInfo(latitude, "纬度信息");
+        checkInfo(industryPark, "工业园区");
+        // 设置内容
+        companyInfo.setSocialCreditCode(socialCreditCode);
+        companyInfo.setTaxPersonName(taxPersonName);
+        companyInfo.setSupervisionUnit(supervisionUnit);
+        companyInfo.setIndustryName(industryName);
+        companyInfo.setLongitude(longitude);
+        companyInfo.setLatitude(latitude);
+        companyInfo.setIndustryPark(industryPark);
+        return companyInfo;
+    }
+
+    @Override
+    public void update(MarkerVo markerVo) {
+        String socialCreditCode = markerVo.getSocialCreditCode();
+        String taxPersonName = markerVo.getTaxPersonName();
+        String supervisionUnit = markerVo.getSupervisionUnit();
+        String industryName = markerVo.getIndustryPark();
+        Float longitude = markerVo.getLongitude();
+        Float latitude = markerVo.getLatitude();
+        String country = markerVo.getCounty();
+        String township = markerVo.getTownship();
+        String industryPark = markerVo.getIndustryPark();
+        if (socialCreditCode == null) {
+            throw new RuntimeException("唯一标识符socialcreditcode不能为空");
+        }
+        // 首先查询有没有对应的数据，如果有表示更新数据，如果没有表示新增数据
+        CompanyInfo companyInfo = companyInfoDao.getCompanyInfoBySocialCreditCode(socialCreditCode);
+        if (companyInfo == null) {
+            log.info("insert data");
+            CompanyInfo insertCompanyInfo = setCompanyInfo(taxPersonName, supervisionUnit, industryName, longitude, latitude, industryPark, socialCreditCode);
+            List<TaxVo> taxVos = markerVo.getTaxInfos();
+            if (taxVos.size() < 1) {
+                throw new RuntimeException("没有填写税收信息");
+            }
+            insertCompanyInfo.setTaxInfos(convert(taxVos));
+            // 插入到数据库中
+            companyInfoDao.saveAndFlush(insertCompanyInfo);
+
+        } else {
+            log.info("update data");
+            boolean updateFlag = updateMain(companyInfo, taxPersonName, supervisionUnit, industryName, longitude, latitude, country, township, industryPark);
+            // 插入的数据
+            List<TaxVo> taxVos = markerVo.getTaxInfos();
+            // 数据库的数据
+            List<TaxInfo> taxInfos = companyInfo.getTaxInfos();
+            update(taxInfos, taxVos, updateFlag);
+            if (updateFlag){
+                // 更新数据到数据库中
+                companyInfoDao.saveAndFlush(companyInfo);
+            }else{
+                log.info("数据没有变化");
+            }
+
+        }
+    }
+
     private Map<Integer, Pair<Long, Long>> getChartInfo(List<CompanyInfo> infos) {
         log.info("filter marker size = {}", infos.size());
         Map<Integer, Pair<Long, Long>> map = new HashMap<>();
@@ -221,9 +360,6 @@ public class TaxInfoServiceImpl implements TaxInfoService {
                 }
             }
         }
-        /*for (Map.Entry<Integer, Pair<Long, Long>> entry : map.entrySet()) {
-            log.warn("key = {}, value = {}", entry.getKey(), entry.getValue());
-        }*/
         return map;
     }
 

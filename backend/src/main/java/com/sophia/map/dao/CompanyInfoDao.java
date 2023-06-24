@@ -22,6 +22,7 @@ public interface CompanyInfoDao extends JpaRepository<CompanyInfo, Integer>, Jpa
     @Query("select distinct industryPark from CompanyInfo")
     List<String> findIndustryParks();
 
+    CompanyInfo getCompanyInfoBySocialCreditCode(String name);
 
 
 }
