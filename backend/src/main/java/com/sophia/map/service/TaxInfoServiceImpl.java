@@ -8,12 +8,20 @@ import com.sophia.map.entity.TaxInfo;
 import com.sophia.map.view.Marker;
 import com.sophia.map.view.MarkerVo;
 import com.sophia.map.view.TaxVo;
-import com.sun.org.apache.bcel.internal.generic.FADD;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 import static com.sophia.map.common.Constant.SALES;
 import static com.sophia.map.common.Constant.SALES_NAME;
@@ -269,7 +277,7 @@ public class TaxInfoServiceImpl implements TaxInfoService {
     }
 
 
-    private CompanyInfo setCompanyInfo(String taxPersonName, String supervisionUnit, String industryName, Float longitude, Float latitude, String industryPark, String socialCreditCode){
+    private CompanyInfo setCompanyInfo(String taxPersonName, String supervisionUnit, String industryName, Float longitude, Float latitude, String industryPark, String socialCreditCode, String county, String township) {
         // 插入数据
         CompanyInfo companyInfo = new CompanyInfo();
         // 非空字段不允许为空
@@ -279,6 +287,8 @@ public class TaxInfoServiceImpl implements TaxInfoService {
         checkInfo(longitude, "经度信息");
         checkInfo(latitude, "纬度信息");
         checkInfo(industryPark, "工业园区");
+        checkInfo(county, "区县");
+        checkInfo(township, "乡镇");
         // 设置内容
         companyInfo.setSocialCreditCode(socialCreditCode);
         companyInfo.setTaxPersonName(taxPersonName);
@@ -287,6 +297,8 @@ public class TaxInfoServiceImpl implements TaxInfoService {
         companyInfo.setLongitude(longitude);
         companyInfo.setLatitude(latitude);
         companyInfo.setIndustryPark(industryPark);
+        companyInfo.setCounty(county);
+        companyInfo.setTownship(township);
         return companyInfo;
     }
 
@@ -298,7 +310,7 @@ public class TaxInfoServiceImpl implements TaxInfoService {
         String industryName = markerVo.getIndustryPark();
         Float longitude = markerVo.getLongitude();
         Float latitude = markerVo.getLatitude();
-        String country = markerVo.getCounty();
+        String county = markerVo.getCounty();
         String township = markerVo.getTownship();
         String industryPark = markerVo.getIndustryPark();
         if (socialCreditCode == null) {
@@ -308,7 +320,7 @@ public class TaxInfoServiceImpl implements TaxInfoService {
         CompanyInfo companyInfo = companyInfoDao.getCompanyInfoBySocialCreditCode(socialCreditCode);
         if (companyInfo == null) {
             log.info("insert data");
-            CompanyInfo insertCompanyInfo = setCompanyInfo(taxPersonName, supervisionUnit, industryName, longitude, latitude, industryPark, socialCreditCode);
+            CompanyInfo insertCompanyInfo = setCompanyInfo(taxPersonName, supervisionUnit, industryName, longitude, latitude, industryPark, socialCreditCode, county, township);
             List<TaxVo> taxVos = markerVo.getTaxInfos();
             if (taxVos.size() < 1) {
                 throw new RuntimeException("没有填写税收信息");
@@ -319,20 +331,38 @@ public class TaxInfoServiceImpl implements TaxInfoService {
 
         } else {
             log.info("update data");
-            boolean updateFlag = updateMain(companyInfo, taxPersonName, supervisionUnit, industryName, longitude, latitude, country, township, industryPark);
+            boolean updateFlag = updateMain(companyInfo, taxPersonName, supervisionUnit, industryName, longitude, latitude, county, township, industryPark);
             // 插入的数据
             List<TaxVo> taxVos = markerVo.getTaxInfos();
             // 数据库的数据
             List<TaxInfo> taxInfos = companyInfo.getTaxInfos();
             update(taxInfos, taxVos, updateFlag);
-            if (updateFlag){
+            if (updateFlag) {
                 // 更新数据到数据库中
                 companyInfoDao.saveAndFlush(companyInfo);
-            }else{
+            } else {
                 log.info("数据没有变化");
             }
 
         }
+    }
+
+    /**
+     * 根据乡镇查询内容
+     *
+     * @param name 乡镇名字
+     * @return chart
+     */
+    @Override
+    public Map<String, Object> getChartByTownship(String name) {
+        List<CompanyInfo> infos = companyInfoDao.findCompanyInfosByTownship(name);
+        return parseCompanyInfos(infos);
+    }
+
+    @Override
+    public Map<String, Object> getChartByCounty(String name) {
+        List<CompanyInfo> infos = companyInfoDao.findCompanyInfosByCounty(name);
+        return parseCompanyInfos(infos);
     }
 
     private Map<Integer, Pair<Long, Long>> getChartInfo(List<CompanyInfo> infos) {

@@ -24,5 +24,9 @@ public interface CompanyInfoDao extends JpaRepository<CompanyInfo, Integer>, Jpa
 
     CompanyInfo getCompanyInfoBySocialCreditCode(String name);
 
+    List<CompanyInfo> findCompanyInfosByCounty(String name);
+
+    List<CompanyInfo> findCompanyInfosByTownship(String name);
+
 
 }

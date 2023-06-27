@@ -27,4 +27,8 @@ public interface TaxInfoService {
     List<Marker> queryMarkersByArea(String area);
 
     void update(MarkerVo markerVo);
+
+    Map<String, Object> getChartByTownship(String name);
+
+    Map<String, Object> getChartByCounty(String name);
 }

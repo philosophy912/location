@@ -46,6 +46,23 @@ export const fetchChartByArea = (data) => {
         data
     });
 }
+// 这里获取的是某个乡镇的所有税收信息，这个地方data需要传递name， 且这个name必须是完整的乡镇名字
+export const fetchChartByTownship = (data) => {
+    return request({
+        url: '/tax/township',
+        method: 'post',
+        data
+    });
+}
+// 这里获取的是某个区县的所有税收信息，这个地方data需要传递name， 且这个name必须是完整的区县名字
+export const fetchChartByCounty = (data) => {
+    return request({
+        url: '/tax/county',
+        method: 'post',
+        data
+    });
+}
+
 
 export const fetchArea = () => {
     return request({

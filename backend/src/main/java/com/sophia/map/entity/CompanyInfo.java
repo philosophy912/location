@@ -48,10 +48,10 @@ public class CompanyInfo implements Serializable {
     @Column(name = "Latitude", nullable = false)
     private Float latitude;
     // 区县
-    @Column(name = "County")
+    @Column(name = "County", nullable = false)
     private String county;
     // 乡镇
-    @Column(name = "Township")
+    @Column(name = "Township", nullable = false)
     private String township;
     // 工业园区
     @Column(name = "Industry_Park", nullable = false)

@@ -166,6 +166,40 @@ public class TaxInfoController {
         return response;
     }
 
+
+    @RequestMapping(value = "/township", method = RequestMethod.POST)
+    public Response getChartsByTownship(@RequestBody Request request) {
+        Response response = new Response();
+        log.info("request is {}", request);
+        try{
+            String name = request.getName();
+            Map<String, Object> data = taxInfoService.getChartByTownship(name);
+            response.setData(data);
+        }catch (Exception e){
+            e.printStackTrace();
+            response.setErrorInfo(e.getMessage());
+            response.setCode(Constant.NOK);
+        }
+        return response;
+    }
+
+    @RequestMapping(value = "/county", method = RequestMethod.POST)
+    public Response getChartsByCounty(@RequestBody Request request) {
+        Response response = new Response();
+        log.info("request is {}", request);
+        try{
+            String name = request.getName();
+            Map<String, Object> data = taxInfoService.getChartByCounty(name);
+            response.setData(data);
+        }catch (Exception e){
+            e.printStackTrace();
+            response.setErrorInfo(e.getMessage());
+            response.setCode(Constant.NOK);
+        }
+        return response;
+    }
+
+
     @RequestMapping(value = "/insert",method = RequestMethod.POST)
     public Response updateMarker(@RequestBody MarkerVo markerVo){
         Response response = new Response();
@@ -178,7 +212,6 @@ public class TaxInfoController {
             response.setCode(Constant.NOK);
         }
         return response;
-
     }
 
 }
