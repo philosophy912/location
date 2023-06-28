@@ -201,6 +201,7 @@ public class TaxInfoServiceImpl implements TaxInfoService {
     }
 
     private void checkInfo(Object info, String tips) {
+        log.trace("info is {} and tips is {}", info, tips);
         if (info == null) {
             throw new RuntimeException(tips + "不能为空");
         }
@@ -304,10 +305,11 @@ public class TaxInfoServiceImpl implements TaxInfoService {
 
     @Override
     public void update(MarkerVo markerVo) {
+        log.debug("markerVo is {}", markerVo);
         String socialCreditCode = markerVo.getSocialCreditCode();
         String taxPersonName = markerVo.getTaxPersonName();
         String supervisionUnit = markerVo.getSupervisionUnit();
-        String industryName = markerVo.getIndustryPark();
+        String industryName = markerVo.getIndustryName();
         Float longitude = markerVo.getLongitude();
         Float latitude = markerVo.getLatitude();
         String county = markerVo.getCounty();
@@ -321,6 +323,7 @@ public class TaxInfoServiceImpl implements TaxInfoService {
         if (companyInfo == null) {
             log.info("insert data");
             CompanyInfo insertCompanyInfo = setCompanyInfo(taxPersonName, supervisionUnit, industryName, longitude, latitude, industryPark, socialCreditCode, county, township);
+            log.debug("companyInfo is {}", insertCompanyInfo);
             List<TaxVo> taxVos = markerVo.getTaxInfos();
             if (taxVos.size() < 1) {
                 throw new RuntimeException("没有填写税收信息");
