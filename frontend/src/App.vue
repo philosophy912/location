@@ -2,17 +2,10 @@
   <div id="map"></div>
   <div id="myChart">
     <div id="user">
-      <el-select v-model="value" class="m-2" placeholder="请选择区域" size="large" @change="changeSelectValue"
-                 clearable>
-        <el-option
-            v-for="item in options"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-        />
-      </el-select>
-      <el-input v-model="input" placeholder="请输入要查询的企业名字" clearable
-                @change="queryCompany"/>
+      <el-cascader v-model="selectedValue" placeholder="搜索 / 选择区域并查看统计" :options="cascaderOptions"
+                   :props="props2"
+                   @change="handleSelection"/>
+      <el-input v-model="input" placeholder="请输入要查询的企业名字" clearable @change="queryCompany"/>
     </div>
     <div id="top"></div>
     <div id="bottom"></div>
@@ -28,7 +21,10 @@ import {
   fetchChartByIds,
   fetchChartByMarkerIds,
   fetchData,
-  fetchIndustryPark
+  fetchIndustryPark,
+  fetchCascader,
+  fetchChartByTownship,
+  fetchChartByCounty
 } from "./api";
 import {onMounted, ref} from "vue";
 import * as echarts from 'echarts'
@@ -37,6 +33,7 @@ let BM;
 let map;
 let topChart;
 let bottomChart;
+let cascaderOptions = ref([]);
 
 // 添加marker集合
 let markers = [];
@@ -44,6 +41,51 @@ let markers = [];
 const input = ref('')
 const value = ref('');
 const options = ref([])
+const selectedValue = ref('')
+const props2 = {
+  multiple: false,
+  checkStrictly: true,
+}
+
+fetchCascader().then((res) => {
+  // console.log(res.data)
+  const options = res.data
+  options.forEach((obj) => {
+    cascaderOptions.value.push(obj)
+  })
+  // console.log(cascaderOptions.value)
+})
+
+const handleSelection = () => {
+  const area = selectedValue.value
+  // console.log(area)
+  // 选择的长度
+  const length = area.length
+  // console.log(area.length)
+  const nameValue = area[length - 1]
+  const data = {"name": nameValue}
+  console.log("data is " + JSON.stringify(data))
+  if (length === 1) {
+    // 查询区县的数据
+    fetchChartByCounty(data).then((res) => {
+      const data = res.data
+      updateChartOption(data)
+    })
+  } else if (length === 2) {
+    // 查询乡镇的数据
+    fetchChartByTownship(data).then((res) => {
+      const data = res.data
+      updateChartOption(data)
+    })
+  } else if (length === 3) {
+    // 查询工业园区的数据
+    fetchChartByArea(data).then((res) => {
+      const data = res.data
+      updateChartOption(data)
+    })
+  }
+
+}
 
 
 // 测试用的
@@ -70,12 +112,7 @@ const changeSelectValue = () => {
     const request = {"name": selectValue}
     fetchChartByArea(request).then(res => {
       const res_data = res.data
-      const sales = res_data.taxes
-      const taxes = res_data.sales
-      const option1 = generatorOption(sales.title, sales.xAxis, sales.yAxis)
-      const option2 = generatorOption(taxes.title, taxes.xAxis, taxes.yAxis)
-      topChart.setOption(option1);
-      bottomChart.setOption(option2);
+      updateChartOption(res_data)
     })
     clearMarkers()
     // 刷新marker
@@ -197,18 +234,23 @@ const drawPloyGons = () => {
   })
 }
 
+const updateChartOption = (data) => {
+  const sales = data.taxes
+  const taxes = data.sales
+  const option1 = generatorOption(sales.title, sales.xAxis, sales.yAxis)
+  const option2 = generatorOption(taxes.title, taxes.xAxis, taxes.yAxis)
+  topChart.setOption(option1);
+  bottomChart.setOption(option2);
+}
+
+
 const requestIds = (latlngs) => {
   const ids = getPolygonMarkers(latlngs)
   // console.log(ids)
   const requestData = {"ids": ids}
   fetchChartByMarkerIds(requestData).then(res => {
     const res_data = res.data
-    const sales = res_data.taxes
-    const taxes = res_data.sales
-    const option1 = generatorOption(sales.title, sales.xAxis, sales.yAxis)
-    const option2 = generatorOption(taxes.title, taxes.xAxis, taxes.yAxis)
-    topChart.setOption(option1);
-    bottomChart.setOption(option2);
+    updateChartOption(res_data)
   })
 }
 
@@ -351,25 +393,16 @@ const updateChartByIds = (x1, y1, x2, y2) => {
   console.log(JSON.stringify(data))
   fetchChartByIds(data).then(res => {
     const res_data = res.data
-    const sales = res_data.taxes
-    const taxes = res_data.sales
-    const option1 = generatorOption(sales.title, sales.xAxis, sales.yAxis)
-    const option2 = generatorOption(taxes.title, taxes.xAxis, taxes.yAxis)
-    topChart.setOption(option1);
-    bottomChart.setOption(option2);
+    updateChartOption(res_data)
   })
 }
 
 
 const updateChart = (id) => {
+  // console.log("updateChart and id is " + JSON.stringify(id))
   fetchChart(id).then(res => {
-    const data = res.data
-    const sales = data.taxes
-    const taxes = data.sales
-    const option1 = generatorOption(sales.title, sales.xAxis, sales.yAxis)
-    const option2 = generatorOption(taxes.title, taxes.xAxis, taxes.yAxis)
-    topChart.setOption(option1);
-    bottomChart.setOption(option2);
+    const res_data = res.data
+    updateChartOption(res_data)
   })
 }
 

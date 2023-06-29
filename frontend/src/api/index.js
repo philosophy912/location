@@ -70,7 +70,12 @@ export const fetchArea = () => {
         method: 'get'
     })
 }
-
+export const fetchCascader = () => {
+    return request({
+        url: './cascader.json',
+        method: 'get'
+    })
+}
 export const fetchChartByMarkerIds = (data) => {
     return request({
         url: '/tax/markerIds',

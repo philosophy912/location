@@ -1,0 +1,75 @@
+{
+    "code": 20000,
+    "data": [
+        {
+            "value": "高县",
+            "label": "高县",
+            "children": [
+                {
+                    "value": "庆符镇",
+                    "label": "庆符镇",
+                    "children": [
+                        {
+                            "value": "工业园区1",
+                            "label": "工业园区1"
+                        }
+                    ]
+                },
+                {
+                    "value": "月江镇",
+                    "label": "月江镇",
+                    "children": [
+                        {
+                            "value": "月江工业园区",
+                            "label": "月江工业园区"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "value": "三江新区",
+            "label": "三江新区",
+            "children": [
+                {
+                    "value": "宋家镇",
+                    "label": "宋家镇",
+                    "children": [
+                        {
+                            "value": "四川长江工业园区",
+                            "label": "四川长江工业园区"
+                        }
+                    ]
+                },
+                {
+                    "value": "罗龙镇",
+                    "label": "罗龙镇",
+                    "children": [
+                        {
+                            "value": "罗龙工业园区",
+                            "label": "罗龙工业园区"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "value": "翠屏区",
+            "label": "翠屏区",
+            "children": [
+                {
+                    "value": "大观楼街道",
+                    "label": "大观楼街道"
+                },
+                {
+                    "value": "安阜街道",
+                    "label": "安阜街道"
+                },
+                {
+                    "value": "思坡镇",
+                    "label": "思坡镇"
+                }
+            ]
+        }
+    ]
+}
